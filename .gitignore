@@ -2,3 +2,5 @@ node_modules/
 config/
 .env.development
 .env.prod
+.runtimeconfig.dev.json
+.runtimeconfig.prod.json

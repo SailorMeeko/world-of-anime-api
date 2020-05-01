@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "default": "world-of-anime-api-dev",
+    "prod": "world-of-anime-api"
+  }
+}

@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
+const functions = require('firebase-functions');
 const jwt = require('jsonwebtoken');
-const jwtSecret = process.env.JWT_SECRET;
-const jwtTokenExpires = process.env.JWT_TOKEN_EXPIRES;
+const jwtSecret = process.env.JWT_SECRET || functions.config().woa.jwtsecret;
+const jwtExpires = process.env.JWT_TOKEN_EXPIRES || parseInt(functions.config().woa.jwtexpires);
 const firebase = require('../../config/firebase');
 
 const { check, validationResult } = require('express-validator');
@@ -45,7 +46,7 @@ router.post('/', [
         }
 
         jwt.sign(payload, jwtSecret, {
-            expiresIn: jwtTokenExpires
+            expiresIn: jwtExpires,
         }, (err, token) => {
             if (err) {
                 throw err;

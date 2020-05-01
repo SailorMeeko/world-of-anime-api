@@ -1,5 +1,6 @@
+const functions = require('firebase-functions');
 const jwt = require('jsonwebtoken');
-const jwtSecret = process.env.JWT_SECRET;
+const jwtSecret = process.env.JWT_SECRET || functions.config().woa.jwtsecret;
 
 const User = require('../models/User');
 
@@ -18,7 +19,7 @@ module.exports = function (req, res, next) {
         const decoded = jwt.verify(token, jwtSecret);
         
         User.findById(decoded.user.id).select().then(function(user) {
-            if (user.type !== 'moderator' && user.type !== 'admin') {
+            if (user.type !== 'admin') {
                 return res.status(401).json({ msg: 'Not authorized' });
             }
 
