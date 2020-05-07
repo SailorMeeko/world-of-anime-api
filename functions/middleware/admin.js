@@ -19,6 +19,10 @@ module.exports = function (req, res, next) {
         const decoded = jwt.verify(token, jwtSecret);
         
         User.findById(decoded.user.id).select().then(function(user) {
+            if (!user) {
+                return res.status(401).json({ msg: 'Token is not valid' });
+            }
+
             if (user.type !== 'admin') {
                 return res.status(401).json({ msg: 'Not authorized' });
             }

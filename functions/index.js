@@ -1,6 +1,7 @@
 const functions = require('firebase-functions');
 
 const express = require('express');
+const cors = require('cors');
 require('dotenv').config({ path: '.env.development' });
 const connectDB = require('./config/db');
 
@@ -11,6 +12,7 @@ connectDB();
 
 // Init Middleware
 app.use(express.json());
+app.use(cors());
 
 // Define Routes
 app.use('/api/users', require('./routes/api/users'));

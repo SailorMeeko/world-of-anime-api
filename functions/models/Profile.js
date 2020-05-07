@@ -5,6 +5,9 @@ const ProfileSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'user'
     },
+    username: {
+        type: String
+    },
     name: {
         type: String
     },
@@ -16,10 +19,6 @@ const ProfileSchema = new mongoose.Schema({
     },
     about_me: {
         type: String
-    },
-    createDate: {
-        type: Date,
-        default: Date.now
     },
     updateDate: {
         type: Date

@@ -3,13 +3,15 @@ const router = express.Router();
 const auth = require('../../middleware/auth');
 
 const Profile = require('../../models/Profile');
+const User = require('../../models/User');
 
 // @router  GET api/profile/me
 // @desc    Get current users profile
 // @access  Private
 router.get('/me', auth, async (req, res) => {
     try {
-        const profile = await Profile.findOne({ user: req.user.id }).populate('user', ['username']);
+        // const profile = await Profile.findOne({ user: req.user.id }).populate('user', ['username']);
+        const profile = await Profile.findOne({ user: req.user.id });
 
         if (!profile) {
             return res.status(400).json({ msg: 'There is no profile for this user' });
@@ -21,6 +23,32 @@ router.get('/me', auth, async (req, res) => {
         res.status(500).send('Server Error');
     }
 });
+
+
+// @router  GET api/profile/:username
+// @desc    Get user by username
+// @access  Private
+router.get('/:username', async (req, res) => {
+    try {
+        const user = await User.findOne({ 'username': new RegExp('^'+req.params.username+'$', "i") }, { "_id": 1 });
+
+        if (!user || user.length === 0) {
+            return res.status(400).json({ errors: [ { msg: 'There is no profile for this user' }] });
+        }
+
+        const profile = await Profile.findOne({ user: user._id });
+
+        if (!profile) {
+            return res.status(400).json({ msg: 'There is no profile for this user' });
+        }
+
+        res.json(profile);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
 
 // @router  POST api/profile
 // @desc    Crate or update a user profile
@@ -40,7 +68,7 @@ router.post('/',
         // Build profile object
 
         const profileFields = {};
-        profileFields.user = req.user.id;
+ 
         if (name) {
             profileFields.name = name;
         }
@@ -71,9 +99,6 @@ router.post('/',
 
                 return res.json(profile);
             }
-
-            // Create
-            profile = new Profile(profileFields);
 
             await profile.save();
             res.json(profile);

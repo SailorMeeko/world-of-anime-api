@@ -5,10 +5,13 @@ const jwt = require('jsonwebtoken');
 const jwtSecret = process.env.JWT_SECRET || functions.config().woa.jwtsecret;
 const jwtExpires = process.env.JWT_TOKEN_EXPIRES || parseInt(functions.config().woa.jwtexpires);
 const firebase = require('../../config/firebase');
+const requireAuth = require('../../middleware/auth');
+const requireAdmin = require('../../middleware/admin');
 
 const { check, validationResult } = require('express-validator');
 
 const User = require('../../models/User');
+const Profile = require('../../models/Profile');
 
 // @router  POST api/users
 // @desc    Register user
@@ -48,11 +51,13 @@ router.post('/', [
             // Handle Errors here.
             var errorCode = error.code;
             var errorMessage = error.message;
+
+            return res.status(500).json({ msg: 'Problem creating account. Please try again.' });
         })
 
         const firebaseUser = firebase.auth().currentUser;
 
-        user = new User({
+        const user = new User({
             username,
             email,
             type: 'regular',
@@ -60,6 +65,16 @@ router.post('/', [
         });
 
         await user.save();
+
+        // Create empty profile
+
+        const profileFields = {};
+        profileFields.user = user.id;
+        profileFields.username = username;
+
+        const profile = new Profile(profileFields);
+
+        await profile.save();        
 
         // Return jsonwebtoken
 
@@ -85,5 +100,63 @@ router.post('/', [
     }
 
 });
+
+
+// @router  DELETE api/user/:username
+// @desc    Delete full account by username
+// @access  Private
+router.delete('/:username', requireAdmin, async (req, res) => {
+    try {
+        const user = await User.findOne({ 'username': new RegExp('^'+req.params.username+'$', "i") }, { "_id": 1 });
+
+        if (!user || user.length === 0) {
+            return res.status(400).json({ errors: [ { msg: 'User does not exist' }] });
+        }
+
+        const userId = user._id;
+
+        // Remove profile
+        await Profile.findOneAndRemove({ user: userId });
+    
+        // Remove user
+        await User.findOneAndRemove({ _id: userId });
+
+        res.json({ msg: 'User deleted' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+
+// @router  DELETE api/profile
+// @desc    Delete full account of logged in user
+// @access  Private
+router.delete('/', requireAuth, async (req, res) => {
+    try {
+        // Remove profile
+        await Profile.findOneAndRemove({ user: req.user.id });
+
+        // Remove user
+        await User.findOneAndRemove({ _id: req.user.id });
+
+        // Remove user from firebase
+        const firebaseUser = firebase.auth().currentUser;
+
+        firebaseUser.delete().then(function() {
+            // User deleted
+        }).catch(function(error) {
+            // An error happened
+        });
+
+        res.json({ msg: 'User deleted' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+
+
 
 module.exports = router;
