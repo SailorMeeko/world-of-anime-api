@@ -8,6 +8,9 @@ const ProfileSchema = new mongoose.Schema({
     username: {
         type: String
     },
+    profile_pic_url: {
+        type: String
+    },
     name: {
         type: String
     },
@@ -17,8 +20,20 @@ const ProfileSchema = new mongoose.Schema({
     birthday: {
         type: Date
     },
+    show_age: {
+        type: Boolean
+    },
     about_me: {
         type: String
+    },
+    favorite_anime: {
+        type: String
+    },
+    favorite_movies: {
+        type: String
+    },
+    createDate: {
+        type: Date
     },
     updateDate: {
         type: Date

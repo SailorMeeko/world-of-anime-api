@@ -30,7 +30,7 @@ router.get('/me', auth, async (req, res) => {
 // @access  Private
 router.get('/:username', async (req, res) => {
     try {
-        const user = await User.findOne({ 'username': new RegExp('^'+req.params.username+'$', "i") }, { "_id": 1 });
+        const user = await User.findOne({ 'username': new RegExp('^'+req.params.username+'$', "i") }, { "_id": 1, "createDate": 1 });
 
         if (!user || user.length === 0) {
             return res.status(400).json({ errors: [ { msg: 'There is no profile for this user' }] });
@@ -42,6 +42,8 @@ router.get('/:username', async (req, res) => {
             return res.status(400).json({ msg: 'There is no profile for this user' });
         }
 
+        profile.createDate = user.createDate;
+
         res.json(profile);
     } catch (err) {
         console.error(err.message);
@@ -51,7 +53,7 @@ router.get('/:username', async (req, res) => {
 
 
 // @router  POST api/profile
-// @desc    Crate or update a user profile
+// @desc    Update a user profile
 // @access  Private
 router.post('/', 
     [ 
@@ -59,19 +61,25 @@ router.post('/',
     ], async (req, res) => {
 
         const {
+            profile_pic_url,
             name,
             gender,
             birthday,
-            about_me
+            show_age,
+            about_me,
+            favorite_anime,
+            favorite_movies
         } = req.body;
 
         // Build profile object
 
         const profileFields = {};
- 
-        if (name) {
-            profileFields.name = name;
+
+        if (profile_pic_url) {
+            profileFields.profile_pic_url = profile_pic_url;
         }
+ 
+        profileFields.name = name;
 
         if (gender) {
             profileFields.gender = gender;
@@ -81,9 +89,10 @@ router.post('/',
             profileFields.birthday = birthday;
         }
 
-        if (about_me) {
-            profileFields.about_me = about_me;
-        }
+        profileFields.show_age = show_age || false;
+        profileFields.about_me = about_me;
+        profileFields.favorite_anime = favorite_anime;
+        profileFields.favorite_movies = favorite_movies;
         
         // if (skills) {
         //     profileFields.skills = skills.split(',').map(skill => skill.trim());
