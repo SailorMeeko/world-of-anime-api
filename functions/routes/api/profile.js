@@ -25,6 +25,41 @@ router.get('/me', auth, async (req, res) => {
 });
 
 
+// @router  GET api/profile/search
+// @desc    Return users based on search criteria
+// @access  Public
+router.get('/search', async (req, res) => {
+    try {
+        const {
+            username,
+            name,
+            gender,
+            about_me,
+            favorite_anime,
+            favorite_movies
+        } = req.body;
+
+        const profiles = await Profile.find({ $and: [
+            username ? {username: new RegExp(username, "i")} : {},
+            name ? {name: new RegExp(name, "i")} : {},
+            about_me ? {about_me: new RegExp(about_me, "i")} : {},
+            favorite_anime ? {favorite_anime: new RegExp(favorite_anime, "i")} : {},
+            favorite_movies ? {favorite_movies: new RegExp(favorite_movies, "i")} : {}
+        ]});
+
+        if (!profiles) {
+            return res.status(400).json({ msg: 'No users matched that criteria' });
+        }
+                                    
+        res.json(profiles)
+
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+
 // @router  GET api/profile/:username
 // @desc    Get user by username
 // @access  Private
@@ -45,11 +80,12 @@ router.get('/:username', async (req, res) => {
         profile.createDate = user.createDate;
 
         res.json(profile);
-    } catch (err) {
-        console.error(err.message);
+    } catch (error) {
+        console.error(error.message);
         res.status(500).send('Server Error');
     }
 });
+
 
 
 // @router  POST api/profile
