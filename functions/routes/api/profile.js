@@ -10,7 +10,6 @@ const User = require('../../models/User');
 // @access  Private
 router.get('/me', auth, async (req, res) => {
     try {
-        // const profile = await Profile.findOne({ user: req.user.id }).populate('user', ['username']);
         const profile = await Profile.findOne({ user: req.user.id });
 
         if (!profile) {
@@ -25,10 +24,10 @@ router.get('/me', auth, async (req, res) => {
 });
 
 
-// @router  GET api/profile/search
+// @router  POST api/profile/search
 // @desc    Return users based on search criteria
 // @access  Public
-router.get('/search', async (req, res) => {
+router.post('/search', async (req, res) => {
     try {
         const {
             username,
@@ -39,13 +38,15 @@ router.get('/search', async (req, res) => {
             favorite_movies
         } = req.body;
 
+        console.log('Searching ', req.body);
         const profiles = await Profile.find({ $and: [
             username ? {username: new RegExp(username, "i")} : {},
             name ? {name: new RegExp(name, "i")} : {},
             about_me ? {about_me: new RegExp(about_me, "i")} : {},
             favorite_anime ? {favorite_anime: new RegExp(favorite_anime, "i")} : {},
             favorite_movies ? {favorite_movies: new RegExp(favorite_movies, "i")} : {}
-        ]});
+        ]},
+        { "username": 1, "profile_pic_url": 1 });
 
         if (!profiles) {
             return res.status(400).json({ msg: 'No users matched that criteria' });
