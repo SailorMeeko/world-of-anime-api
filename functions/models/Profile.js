@@ -5,10 +5,11 @@ const ProfileSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'user'
     },
-    username: {
-        type: String
+    profile_pic: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'image'
     },
-    profile_pic_url: {
+    username: {
         type: String
     },
     name: {

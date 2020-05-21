@@ -4,6 +4,7 @@ const auth = require('../../middleware/auth');
 
 const Profile = require('../../models/Profile');
 const User = require('../../models/User');
+const Image = require('../../models/Image');
 
 // @router  GET api/profile/me
 // @desc    Get current users profile
@@ -38,7 +39,6 @@ router.post('/search', async (req, res) => {
             favorite_movies
         } = req.body;
 
-        console.log('Searching ', req.body);
         const profiles = await Profile.find({ $and: [
             username ? {username: new RegExp(username, "i")} : {},
             name ? {name: new RegExp(name, "i")} : {},
@@ -46,7 +46,7 @@ router.post('/search', async (req, res) => {
             favorite_anime ? {favorite_anime: new RegExp(favorite_anime, "i")} : {},
             favorite_movies ? {favorite_movies: new RegExp(favorite_movies, "i")} : {}
         ]},
-        { "username": 1, "profile_pic_url": 1 });
+        { "username": 1 }).populate('profile_pic', ['url_full', 'url_175']);
 
         if (!profiles) {
             return res.status(400).json({ msg: 'No users matched that criteria' });
@@ -72,7 +72,7 @@ router.get('/:username', async (req, res) => {
             return res.status(400).json({ errors: [ { msg: 'There is no profile for this user' }] });
         }
 
-        const profile = await Profile.findOne({ user: user._id });
+        const profile = await Profile.findOne({ user: user._id }).populate('profile_pic', ['url_full', 'url_175']);
 
         if (!profile) {
             return res.status(400).json({ msg: 'There is no profile for this user' });
@@ -98,7 +98,7 @@ router.post('/',
     ], async (req, res) => {
 
         const {
-            profile_pic_url,
+            profile_pic,
             name,
             gender,
             birthday,
@@ -112,8 +112,9 @@ router.post('/',
 
         const profileFields = {};
 
-        if (profile_pic_url) {
-            profileFields.profile_pic_url = profile_pic_url;
+        if (profile_pic) {
+            const image = await Image.findById(profile_pic);
+            profileFields.profile_pic = image;
         }
  
         profileFields.name = name;
@@ -139,9 +140,14 @@ router.post('/',
             let profile = await Profile.findOne({ user: req.user.id });
 
             if (profile) {
-                // Update
+                // Update profile
                 profileFields.updateDate = Date.now();
                 profile = await Profile.findOneAndUpdate({ user: req.user.id }, { $set: profileFields}, { new: true });
+
+                // Update user with avatar_url
+                // For now, we are just using their profile image as their avatar
+
+                await User.findByIdAndUpdate(req.user.id, { $set: { avatar: profileFields.profile_pic }});
 
                 return res.json(profile);
             }

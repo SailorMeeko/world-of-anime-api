@@ -18,6 +18,10 @@ const UserSchema = new mongoose.Schema({
     uid: {
         type: String
     },
+    avatar: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'image'
+    },
     createDate: {
         type: Date,
         default: Date.now

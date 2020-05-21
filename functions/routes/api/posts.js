@@ -27,7 +27,10 @@ router.post('/', [ auth, [
             profile: req.body.profileId
         });
 
-        const post = await newPost.save();
+        const post = await newPost.save().then(post => post.populate({ path: 'user', 
+                populate: { path: 'avatar', select: 'url_avatar, url_full' },
+                select: 'username'
+            }).execPopulate());
 
         res.json(post);
     } catch (error) {
@@ -42,7 +45,16 @@ router.post('/', [ auth, [
 // @access  Private
 router.get('/profile/:profile_id', async (req, res) => {
     try {
-        const posts = await Post.find({ profile: req.params.profile_id }).sort({ date: -1 });
+        const posts = await Post.find({ profile: req.params.profile_id })
+            .populate({ path: 'user', 
+                populate: { path: 'avatar', select: 'url_avatar, url_full' },
+                select: 'username'
+            })
+            .populate({ path: 'comments.user',
+                populate: { path: 'avatar', select: 'url_avatar, url_full' },
+                select: 'username'
+            })
+            .sort({ date: -1 });
         res.json(posts);
     } catch (error) {
         console.log(error.message);
