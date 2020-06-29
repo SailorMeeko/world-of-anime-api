@@ -10,9 +10,15 @@ const app = express();
 // Connect Database
 connectDB();
 
+// CORS options
+let corsOptions = {
+    origin: '*',
+    optionsSuccessStatus: 200
+};
+
 // Init Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors(corsOptions));
 
 // Define Routes
 app.use('/api/users', require('./routes/api/users'));
@@ -20,6 +26,7 @@ app.use('/api/auth', require('./routes/api/auth'));
 app.use('/api/profile', require('./routes/api/profile'));
 app.use('/api/posts', require('./routes/api/posts'));
 app.use('/api/image', require('./routes/api/image'));
+app.use('/api/friendship', require('./routes/api/friendship'));
 
 const PORT = process.env.PORT || 5000;
 

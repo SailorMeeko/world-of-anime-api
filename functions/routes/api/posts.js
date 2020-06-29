@@ -42,7 +42,7 @@ router.post('/', [ auth, [
 
 // @router  GET api/posts/profile/:profile_id
 // @desc    Get all posts for a profile
-// @access  Private
+// @access  Public
 router.get('/profile/:profile_id', async (req, res) => {
     try {
         const posts = await Post.find({ profile: req.params.profile_id })
@@ -63,26 +63,34 @@ router.get('/profile/:profile_id', async (req, res) => {
 });
 
 
-// // @router  GET api/posts/:id
-// // @desc    Get post by id
-// // @access  Private
-// router.get('/:id', auth, async (req, res) => {
-//     try {
-//         const post = await Post.findById(req.params.id).sort();
+// @router  GET api/posts/:id
+// @desc    Get post by id
+// @access  Public
+router.get('/:id',  async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id)
+            .populate({ path: 'user', 
+                populate: { path: 'avatar', select: 'url_avatar, url_full' },
+                select: 'username'
+            })
+            .populate({ path: 'comments.user',
+                populate: { path: 'avatar', select: 'url_avatar, url_full' },
+                select: 'username'
+            });
 
-//         if (!post) {
-//             res.status(404).json({ msg: 'Post not found' });
-//         }
-//         res.json(post);
-//     } catch (error) {
-//         if (error.name == 'CastError') {
-//             res.status(404).json({ msg: 'Post not found' });
-//         }
+        if (!post) {
+            res.status(404).json({ msg: 'Post not found' });
+        }
+        res.json(post);
+    } catch (error) {
+        if (error.name == 'CastError') {
+            res.status(404).json({ msg: 'Post not found' });
+        }
 
-//         console.log(error.message);
-//         res.status(500).send('Server Error');
-//     }
-// });
+        console.log(error.message);
+        res.status(500).send('Server Error');
+    }
+});
 
 
 // // @router  DELETE api/posts/:id
@@ -138,9 +146,16 @@ router.post('/comment/:post_id', [ auth, [
   
           post.comments.unshift(newComment);
 
-          await post.save();
+          const updatedPost = await post.save().then(post => post.populate({ path: 'user', 
+                populate: { path: 'avatar', select: 'url_avatar, url_full' },
+                select: 'username'
+            })
+            .populate({ path: 'comments.user',
+                populate: { path: 'avatar', select: 'url_avatar, url_full' },
+                select: 'username'
+            }).execPopulate());
   
-          res.json(post.comments);
+          res.json(updatedPost);
       } catch (error) {
           console.error(error.message);
           res.status(500).send('Server Error');
