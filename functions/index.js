@@ -28,7 +28,7 @@ app.use('/api/posts', require('./routes/api/posts'));
 app.use('/api/image', require('./routes/api/image'));
 app.use('/api/friendship', require('./routes/api/friendship'));
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.LOCAL_PORT || functions.config().woa.port;
 
 app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
 

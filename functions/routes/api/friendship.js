@@ -146,13 +146,105 @@ router.get('/status/:user1/:user2', async (req, res) => {
 // @access  Private
 router.get('/friends', auth, async (req, res) => {
     try {
+        // A Friendship could be either initiated by user (user1) or by someone else (user2)
+        // This query pulls both out of the table at once, and constructs a new allFriends array
+        // containing only the user which is not the same as the one being asked about
         const friends = await Friendship.find({ status: 1,  $or: [
                                                 { user1: req.user.id},
                                                 { user2: req.user.id} ]
-                                            });
+                                            }).populate({ path: 'user1',
+                                            populate: { path: 'avatar', select: 'url_avatar, url_full' }})
+                                        .populate({ path: 'user2',
+                                            populate: { path: 'avatar', select: 'url_avatar, url_full' }},
+                                          );
 
-        res.json(friends);
+        let allFriends = [];
 
+        friends.forEach(function(user) {
+            // Need to convert types, which is why the double equals instead of triple
+            if (req.user.id == user.user1._id) {
+                allFriends.push(user.user2);
+            } else {
+                allFriends.push(user.user1);
+            }
+        });
+
+        res.json(allFriends);   
+
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+
+// @router  GET api/friendship/friends/:user_id
+// @desc    Get friends for a user_id
+// @access  Public
+router.get('/friends/:user_id', async (req, res) => {
+    try {
+        // A Friendship could be either initiated by user (user1) or by someone else (user2)
+        // This query pulls both out of the table at once, and constructs a new allFriends array
+        // containing only the user which is not the same as the one being asked about
+        const friends = await Friendship.find({ status: 1,  $or: [
+                                                { user1: req.params.user_id},
+                                                { user2: req.params.user_id} ]
+                                            }).populate({ path: 'user1',
+                                                populate: { path: 'avatar', select: 'url_avatar, url_full' }})
+                                            .populate({ path: 'user2',
+                                                populate: { path: 'avatar', select: 'url_avatar, url_full' }},
+                                              );
+
+        let allFriends = [];
+
+        friends.forEach(function(user) {
+            // Need to convert types, which is why the double equals instead of triple
+            if (req.params.user_id == user.user1._id) {
+                allFriends.push(user.user2);
+            } else {
+                allFriends.push(user.user1);
+            }
+        });
+
+        res.json(allFriends);        
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+
+// @router  GET api/friendship/request/:request_id/accept
+// @desc    Accept friend request
+// @access  Private
+router.get('/request/:request_id/accept', auth, async (req, res) => {
+    try {
+        friendship = await Friendship.findOneAndUpdate({ _id: req.params.request_id, user2: req.user.id }, { status: 1 }, { new: true });
+        if (!friendship) {
+            res.json({ msg: 'No friedship request found' });
+        }
+        else {
+            res.json(friendship);
+        }
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+
+// @router  GET api/friendship/request/:request_id/reject
+// @desc    Reject friend request
+// @access  Private
+router.get('/request/:request_id/reject', auth, async (req, res) => {
+    try {
+        friendship = await Friendship.findOneAndUpdate({ _id: req.params.request_id, user2: req.user.id }, { status: 2 }, { new: true });
+        if (!friendship) {
+            res.json({ msg: 'No friedship request found' });
+        }
+        else {
+            res.json(friendship);
+        }
     } catch (error) {
         console.error(error.message);
         res.status(500).send('Server Error');
