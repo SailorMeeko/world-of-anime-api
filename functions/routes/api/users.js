@@ -129,7 +129,7 @@ router.delete('/:username', requireAdmin, async (req, res) => {
 });
 
 
-// @router  DELETE api/profile
+// @router  DELETE api/user
 // @desc    Delete full account of logged in user
 // @access  Private
 router.delete('/', requireAuth, async (req, res) => {
@@ -157,6 +157,23 @@ router.delete('/', requireAuth, async (req, res) => {
 });
 
 
+// @router  GET api/user/recent/:num
+// @desc    Get most recent new members
+// @access  Public
+router.get('/recent', async (req, res) => {
+    try {
+        const users = await User.find()
+                                .populate('avatar', ['url_full', 'url_175'])
+                                .sort({createDate: 'descending'})
+                                .limit(4);
+
+        res.set('Cache-Control', 'public, max-age=60, s-maxage=60');
+        res.json(users);
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send('Server Error');
+    }
+})
 
 
 module.exports = router;

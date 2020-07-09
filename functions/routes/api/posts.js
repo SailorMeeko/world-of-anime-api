@@ -4,8 +4,6 @@ const { check, validationResult } = require('express-validator/check');
 const auth = require('../../middleware/auth');
 
 const Post = require('../../models/Post');
-const Profile = require('../../models/Profile');
-const User = require('../../models/User');
 
 // @router  POST api/posts
 // @desc    Create a post
@@ -19,8 +17,6 @@ router.post('/', [ auth, [
     }
 
     try {
-        const user = await User.findById(req.user.id);
-
         const newPost = new Post({
             user: req.user.id,
             text: req.body.text,

@@ -25,6 +25,7 @@ app.use('/api/users', require('./routes/api/users'));
 app.use('/api/auth', require('./routes/api/auth'));
 app.use('/api/profile', require('./routes/api/profile'));
 app.use('/api/posts', require('./routes/api/posts'));
+app.use('/api/message', require('./routes/api/message'));
 app.use('/api/image', require('./routes/api/image'));
 app.use('/api/friendship', require('./routes/api/friendship'));
 
