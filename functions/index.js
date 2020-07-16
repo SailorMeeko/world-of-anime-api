@@ -6,6 +6,7 @@ require('dotenv').config({ path: '.env.development' });
 const connectDB = require('./config/db');
 
 const app = express();
+app.options('*', cors()) // include before other routes
 
 // Connect Database
 connectDB();

@@ -13,6 +13,33 @@ const { check, validationResult } = require('express-validator');
 const User = require('../../models/User');
 const Profile = require('../../models/Profile');
 
+
+// @router  DELETE api/users/forgot_password
+// @desc    Trigger forgot password e-mail
+// @access  Public
+router.post('/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email || email.length === 0) {
+            return res.status(400).json({ errors: [ { msg: 'Email required' }] });
+        }        
+
+        // Trigger password reset e-mail
+        firebase.auth().sendPasswordResetEmail(email).then(function() {
+            // Email sent.
+          }).catch(function(error) {
+            // An error happened.
+          });
+
+        res.json({ msg: 'Email sent' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+
 // @router  POST api/users
 // @desc    Register user
 // @access  Public
@@ -102,7 +129,7 @@ router.post('/', [
 });
 
 
-// @router  DELETE api/user/:username
+// @router  DELETE api/users/:username
 // @desc    Delete full account by username
 // @access  Private
 router.delete('/:username', requireAdmin, async (req, res) => {
@@ -129,7 +156,7 @@ router.delete('/:username', requireAdmin, async (req, res) => {
 });
 
 
-// @router  DELETE api/user
+// @router  DELETE api/users
 // @desc    Delete full account of logged in user
 // @access  Private
 router.delete('/', requireAuth, async (req, res) => {
@@ -157,7 +184,7 @@ router.delete('/', requireAuth, async (req, res) => {
 });
 
 
-// @router  GET api/user/recent/:num
+// @router  GET api/users/recent/:num
 // @desc    Get most recent new members
 // @access  Public
 router.get('/recent', async (req, res) => {

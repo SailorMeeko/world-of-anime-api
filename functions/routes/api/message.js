@@ -61,6 +61,33 @@ router.get('/', auth, async (req, res) => {
 });
 
 
+// @router  GET api/message/:id
+// @desc    Get a single private message
+// @access  Private
+router.get('/single/:message_id', auth, async (req, res) => {
+    try {
+        const message = await Message.findOne({ _id: req.params.message_id })
+            .populate({ path: 'from', 
+                populate: { path: 'avatar', select: 'url_avatar, url_full' }
+            })
+            .populate({ path: 'comments.user',
+                populate: { path: 'avatar', select: 'url_avatar, url_full' }
+            })
+            .sort({ date: -1 });
+
+          // Only the to or from of this message should be allowed to comment
+          if (message == null || (req.user.id != message.to && req.user.id != message.from.id) ) {
+            return res.status(500).send('This is not your message.');
+          }
+          
+        res.json(message);
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+
 // @router  POST api/message/comment/:id
 // @desc    Comment on a message
 // @access  Private
@@ -76,7 +103,7 @@ router.post('/comment/:message_id', [ auth, [
           const message = await Message.findById(req.params.message_id);
 
           // Only the to or from of this message should be allowed to comment
-          if (req.user.id != message.to && req.user.id != message.from) {
+          if (req.user.id != message.to && req.user.id != message.from.id) {
             return res.status(500).send('This is not your message.');
           }
   

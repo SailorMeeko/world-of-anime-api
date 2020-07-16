@@ -18,6 +18,10 @@ const MessageSchema = new Schema({
         type: String,
         required: true
     },
+    read: {
+        type: Number,
+        default: 0
+    },
     comments: [
         {
             user: {
