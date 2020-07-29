@@ -66,7 +66,7 @@ router.get('/', auth, async (req, res) => {
 // @access  Private
 router.get('/single/:message_id', auth, async (req, res) => {
     try {
-        const message = await Message.findOne({ _id: req.params.message_id })
+        const message = await Message.findById({ _id: req.params.message_id })
             .populate({ path: 'from', 
                 populate: { path: 'avatar', select: 'url_avatar, url_full' }
             })
@@ -103,7 +103,7 @@ router.post('/comment/:message_id', [ auth, [
           const message = await Message.findById(req.params.message_id);
 
           // Only the to or from of this message should be allowed to comment
-          if (req.user.id != message.to && req.user.id != message.from.id) {
+          if (req.user.id != message.to && req.user.id != message.from) {
             return res.status(500).send('This is not your message.');
           }
   

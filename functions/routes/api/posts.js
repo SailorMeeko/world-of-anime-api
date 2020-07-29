@@ -41,6 +41,8 @@ router.post('/', [ auth, [
 // @access  Public
 router.get('/profile/:profile_id', async (req, res) => {
     try {
+        const { page = 1, limit = 10 } = req.query;
+
         const posts = await Post.find({ profile: req.params.profile_id })
             .populate({ path: 'user', 
                 populate: { path: 'avatar', select: 'url_avatar, url_full' },
@@ -50,8 +52,17 @@ router.get('/profile/:profile_id', async (req, res) => {
                 populate: { path: 'avatar', select: 'url_avatar, url_full' },
                 select: 'username'
             })
-            .sort({ date: -1 });
-        res.json(posts);
+            .sort({ date: -1 })
+            .limit(limit * 1)
+            .skip((page - 1) * limit);
+
+        const count = await Post.countDocuments({ profile: req.params.profile_id });            
+
+        res.json({
+            posts,
+            totalPages: Math.ceil(count / limit),
+            currentPage: page
+          });
     } catch (error) {
         console.log(error.message);
         res.status(500).send('Server Error');

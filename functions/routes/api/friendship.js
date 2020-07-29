@@ -219,7 +219,7 @@ router.get('/friends/:user_id', async (req, res) => {
 // @access  Private
 router.get('/request/:request_id/accept', auth, async (req, res) => {
     try {
-        friendship = await Friendship.findOneAndUpdate({ _id: req.params.request_id, user2: req.user.id }, { status: 1 }, { new: true });
+        const friendship = await Friendship.findOneAndUpdate({ _id: req.params.request_id, user2: req.user.id }, { status: 1 }, { new: true });
         if (!friendship) {
             res.json({ msg: 'No friedship request found' });
         }
@@ -238,13 +238,59 @@ router.get('/request/:request_id/accept', auth, async (req, res) => {
 // @access  Private
 router.get('/request/:request_id/reject', auth, async (req, res) => {
     try {
-        friendship = await Friendship.findOneAndUpdate({ _id: req.params.request_id, user2: req.user.id }, { status: 2 }, { new: true });
+        const friendship = await Friendship.findOneAndUpdate({ _id: req.params.request_id, user2: req.user.id }, { status: 2 }, { new: true });
         if (!friendship) {
             res.json({ msg: 'No friedship request found' });
         }
         else {
             res.json(friendship);
         }
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+
+// @router  GET api/friendship/remove/:user_id
+// @desc    Removes an existing friendship
+// @access Private
+router.get('/remove/:user_id', auth, async (req, res) => {
+    try {
+        let friendshipId;
+
+        // First try user1 -> user2
+        const request = await Friendship.findOne({ user1: req.user.id, user2: req.params.user_id });
+
+        if (request) {
+            const status = request.status;
+
+            if (status === 1) {
+                friendshipId = request._id;
+            }
+
+        } else {
+
+            // Now try user2 -> user1
+            const request = await Friendship.findOne({ user1: req.params.user_id, user2: req.user.id });
+
+            if (request) {
+                const status = request.status;
+    
+                if (status === 1) {
+                    friendshipId = request._id;
+                }
+
+            }
+        };
+
+        if (!friendshipId) {
+            res.json('no friendship');
+        } else {
+            await Friendship.findByIdAndDelete(friendshipId);
+            res.json('friendship removed');
+        }
+
     } catch (error) {
         console.error(error.message);
         res.status(500).send('Server Error');

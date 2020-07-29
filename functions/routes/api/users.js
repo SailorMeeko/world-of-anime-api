@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const jwtSecret = process.env.JWT_SECRET || functions.config().woa.jwtsecret;
 const jwtExpires = process.env.JWT_TOKEN_EXPIRES || parseInt(functions.config().woa.jwtexpires);
 const firebase = require('../../config/firebase');
+const auth = require('../../middleware/auth');
 const requireAuth = require('../../middleware/auth');
 const requireAdmin = require('../../middleware/admin');
 
@@ -184,7 +185,7 @@ router.delete('/', requireAuth, async (req, res) => {
 });
 
 
-// @router  GET api/users/recent/:num
+// @router  GET api/users/recent
 // @desc    Get most recent new members
 // @access  Public
 router.get('/recent', async (req, res) => {
@@ -200,7 +201,43 @@ router.get('/recent', async (req, res) => {
         console.error(error.message);
         res.status(500).send('Server Error');
     }
-})
+});
+
+
+// @router  GET api/users/online
+// @desc    Get who is currently online
+// @access  Public
+router.get('/online', async (req, res) => {
+    try {
+        // Last online is defined as active in the past X minutes
+        const minutes = 15;
+
+        const users = await User.find({ 'lastOnline': { $gt: new Date(Date.now() - minutes * 60 * 1000) } })
+                                .populate('avatar', ['url_full', 'url_175'])
+                                .sort({lastOnline: 'descending'});
+
+
+        res.json(users);
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+
+// @router  GET api/users/last_online
+// @desc    Get current users profile
+// @access  Private
+router.get('/last_online', auth, async (req, res) => {
+    try {
+        const user = await User.findByIdAndUpdate(req.user.id, { lastOnline: Date.now() });
+
+        res.sendStatus(200);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
 
 
 module.exports = router;
