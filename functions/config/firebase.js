@@ -11,6 +11,8 @@ const firebaseConfig = {
     appId: process.env.FIREBASE_APP_ID || functions.config().woa.firebaseappid
 };
 
+
+
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }

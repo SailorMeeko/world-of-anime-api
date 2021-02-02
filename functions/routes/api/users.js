@@ -121,6 +121,8 @@ router.post('/', [
                 res.json({ token });
             }
         });
+        
+        console.log('Created user ', username);
 
     } catch (err) {
         console.error(err.message);
@@ -148,6 +150,8 @@ router.delete('/:username', requireAdmin, async (req, res) => {
     
         // Remove user
         await User.findOneAndRemove({ _id: userId });
+
+        console.log('Admin deleted user ', req.params.username);
 
         res.json({ msg: 'User deleted' });
     } catch (err) {

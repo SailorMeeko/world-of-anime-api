@@ -1,5 +1,5 @@
 node_modules/
 .env.development
-.env.prod
+.env.prd
 .runtimeconfig.dev.json
-.runtimeconfig.prod.json
+.runtimeconfig.prd.json

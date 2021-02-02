@@ -2,7 +2,7 @@ const functions = require('firebase-functions');
 
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config({ path: '.env.development' });
+require('dotenv').config({ path: '.env.environment' });
 const connectDB = require('./config/db');
 
 const app = express();
@@ -29,6 +29,7 @@ app.use('/api/posts', require('./routes/api/posts'));
 app.use('/api/message', require('./routes/api/message'));
 app.use('/api/image', require('./routes/api/image'));
 app.use('/api/friendship', require('./routes/api/friendship'));
+app.use('/api/notification', require('./routes/api/notification'));
 
 const PORT = process.env.LOCAL_PORT || functions.config().woa.port;
 
